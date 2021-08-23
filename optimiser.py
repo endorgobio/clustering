@@ -102,7 +102,7 @@ def solve_model(instance, distances, model, solver_name, solver_path=None):
 
         # Computes cluster measurements
         for cluster in solution.clusters_list:
-            print([node.id for node in cluster.node_list])
+            #print([node.id for node in cluster.node_list])
             cluster.get_measures(distances)
 
         # get dataframe to print

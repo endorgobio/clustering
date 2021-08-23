@@ -3,6 +3,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+import dash_table
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 from utilities import Node, Cluster, Solution, Instance
@@ -15,6 +16,8 @@ df_clients = pd.read_csv(r'data\data_small.csv')
 #df = pd.read_csv('data_large.csv')
 colors_df = pd.read_csv(r'data\colors.csv') # convierte la paleta de colores en lista
 colors_list = colors_df['colors'].tolist()
+
+
 
 # Define nodes
 nodes = []
@@ -58,13 +61,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets,
 # need to run it in heroku
 server = app.server
 
-controls_model = html.Div([
-    # dbc.Card(
-    #     dbc.CardBody([
-    #
-    #     ])
-    # )
-    dbc.Row([
+controls_model = dbc.Row([
         dbc.Col(
                 [
                     dbc.FormGroup(
@@ -97,20 +94,66 @@ controls_model = html.Div([
                 dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0),
                 md=4
             )
-    ])
-])
+    ]),
+
+PAGE_SIZE = 15
 tab1_content = dbc.Row([
-    dbc.Row(controls_model),
-    dbc.Row([
-            dbc.Col(dcc.Graph(id="scattermap"), width=6),
-            dbc.Col(dcc.Graph(id="scattermap"), width=6),
-        ]
+    # dbc.Row(
+    #     dbc.Col(controls_model)),
+    dbc.Container(controls_model, fluid=True),
+
+    dbc.Container(
+        dbc.Row([
+            dbc.Col(
+                dbc.Card(
+                    dbc.CardBody(
+                        [  # table of students
+                            dash_table.DataTable(
+                                id='datatable',
+                                columns=[
+                                    {"name": i, "id": i} for i in ['id', 'latitude', 'longitude', 'demand', 'zona']
+                                ],
+                                style_table={'overflowX': 'auto'},
+                                # style_cell_conditional=[
+                                #     {'if': {'column_id': 'nombre'},
+                                #      'width': '35%'},
+                                #     {'if': {'column_id': 'id'},
+                                #      'width': '12%'},
+                                #     {'if': {'column_id': 'nivel'},
+                                #      'width': '12%'},
+                                #     {'if': {'column_id': 'genero'},
+                                #      'width': '12%'},
+                                #     {'if': {'column_id': 'id_hermanos'},
+                                #      'width': '27%'},
+                                #],
+                                css=[{'selector': 'table', 'rule': 'table-layout: fixed'}],
+                                style_cell={
+                                    'textAlign': 'left',
+                                    'width': '{}%'.format(len(df_clients.columns)),
+                                    'textOverflow': 'ellipsis',
+                                    'overflow': 'hidden'
+                                },
+                                style_as_list_view=True,
+                                page_current=0,
+                                page_size=PAGE_SIZE,
+                                page_action='custom'
+                            ),
+                        ]
+                    )
+                ),
+                md=5
+            ),
+            dbc.Col(dcc.Graph(id="scattermap"), width=7),
+        ]),
+        fluid=True
     )
 
 ])
 
+
+
 # Define the layout
-app.layout = dbc.Row([
+app.layout = dbc.Container([
         html.Div(
             children=[
                 html.H1(
@@ -134,10 +177,11 @@ app.layout = dbc.Row([
             id="tabs",
             active_tab="historia",
         ),
-        dbc.Row(id="tab-content"),
+        dbc.Container(id="tab-content", className="p-4", fluid=True),
     # dcc.Store inside the app that stores the intermediate value
     dcc.Store(id='data_solver'),
-    ]
+    ],
+    fluid=True,
 )
 
 
@@ -160,40 +204,51 @@ def render_tab_content(active_tab):
     elif active_tab == "detalles":
         return tab1_content
 
+# Update table with student information
+@app.callback(
+    Output('datatable', 'data'),
+    Input('datatable', "page_current"),
+    Input('datatable', "page_size"),
+    Input('data_solver', 'data'))
+def update_table(page_current, page_size, jsonified_sol_data):
+    data_solver = pd.read_json(jsonified_sol_data, orient='split')
+    return data_solver.iloc[page_current*page_size:(page_current+ 1)*page_size].to_dict('records')
 
-@app.callback(Output('scattermap', 'figure'),
-              Input('resolver', 'nclicks'),
+#Output('scattermap', 'figure'),
+@app.callback(Output('data_solver', 'data'),
+              Input('resolver', 'n_clicks'),
               State('n_clusters', 'value'),
               State('bal_gen', 'value')
               )
-def update_scatter(clic_resolver, n_clusters, epsilon):
+def solve_model(clic_resolver, n_clusters, epsilon):
     instance = Instance(df_clients, nodes, n_clusters, epsilon/100)
     # create model
     model = opti.create_model(instance, distances)
     solution, opt_term_cond = opti.solve_model(instance, distances, model, solvername)
+    data_returned = solution.dfPrint.to_json(date_format='iso', orient='split')
+
+    # TODO deal with the unfeasible case
+    return data_returned
+
+@app.callback(Output('scattermap', 'figure'),
+              Input('data_solver', 'data')
+              )
+def update_graph(jsonified_sol_data):
+    data_solver = pd.read_json(jsonified_sol_data, orient='split')
+    zonas = sorted(data_solver['zona'].unique())
 
     # Draw graph
-    map_clients = px.scatter_mapbox(solution.dfPrint,
+    map_clients = px.scatter_mapbox(data_solver,
                                  lat="latitude",
                                  lon="longitude",
                                  hover_name="demand",
                                  color="zona",
+                                 category_orders={"zona": zonas},
                                  color_continuous_scale=px.colors.cyclical.Edge,
                                  size_max=15,
                                  zoom=10,
                                  height=600)
     map_clients.update_layout(mapbox_style="open-street-map")
-
-    # data_scater = pd.read_json(jsonified_sol_data, orient='split')
-    # fig = px.scatter(data_scater, x='dia', y='nombre',
-    #                  category_orders={"dia": ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]}
-    #                  )
-    # fig.update_traces(marker_size=10)
-    # fig.update_layout(
-    #     xaxis_title="Día de la semana",
-    #     yaxis_title="Estudiante",
-    #     xaxis_type='category'
-    # )
     return map_clients
 
 

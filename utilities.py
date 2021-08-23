@@ -75,11 +75,11 @@ class Solution:
         return obj
 
     def get_dfToPrint(self):
-        self.dfPrint['zona_id'] = -99
+        #self.dfPrint['zona_id'] = -99
         self.dfPrint['zona'] = None
         for i in range(len(self.clusters_list)):
             for node in self.clusters_list[i].node_list:
-                self.dfPrint.loc[self.dfPrint['id'] == node.id, 'zona_id'] = i + 1
+                # self.dfPrint.loc[self.dfPrint['id'] == node.id, 'zona_id'] = i + 1
                 self.dfPrint.loc[self.dfPrint['id'] == node.id, 'zona'] = "zona" + str(i + 1)
 
 
