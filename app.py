@@ -13,7 +13,7 @@ import optimiser as opti
 
 
 # read data
-df_clients = pd.read_csv(r'data\data_small.csv')
+df_clients = pd.read_csv(r'data\data_medium.csv')
 #df = pd.read_csv('data_large.csv')
 colors_df = pd.read_csv(r'data\colors.csv') # convierte la paleta de colores en lista
 colors_list = colors_df['colors'].tolist()
@@ -68,7 +68,7 @@ controls_model = dbc.Row([
                     dbc.FormGroup(
                         [
                             html.P("Número de clusters"),
-                            dbc.Input(id="n_clusters", type="number", min=1, max=len(df_clients), step=1, value=4),
+                            dbc.Input(id="n_clusters", type="number", min=1, max=len(df_clients), step=1, value=int(len(df_clients)/10)),
                         ]
                     ),
 
@@ -93,7 +93,12 @@ controls_model = dbc.Row([
             ),
             dbc.Col([
                     dbc.FormGroup(
-                        [dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0),]
+                        # dcc.Loading(
+                        #     id="loading-1",
+                        #     type="default",
+                        #     children=dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0)
+                        # ),
+                        dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0)
                     ),
                     dbc.Modal(
                         [
@@ -111,7 +116,6 @@ controls_model = dbc.Row([
                     ),
 
                     ],
-
                 md=4
             )
     ]),
@@ -234,7 +238,8 @@ def update_table(page_current, page_size, jsonified_sol_data):
     data_solver = pd.read_json(jsonified_sol_data, orient='split')
     return data_solver.iloc[page_current*page_size:(page_current+ 1)*page_size].to_dict('records')
 
-#Output('scattermap', 'figure'),
+
+# Output('scattermap', 'figure'),
 @app.callback(Output('data_solver', 'data'),
               Output('modal', 'is_open'),
               Input('resolver', 'n_clicks'),
@@ -247,7 +252,6 @@ def solve_model(clic_resolver, n_clusters, epsilon):
     model = opti.create_model(instance, distances)
     solution, opt_term_cond = opti.solve_model(instance, distances, model, solvername)
     if opt_term_cond == 'infeasible':
-        print(opt_term_cond)
         return no_update, True
     else:
         data_returned = solution.dfPrint.to_json(date_format='iso', orient='split')
@@ -269,7 +273,8 @@ def update_graph(jsonified_sol_data):
                                  color="zona",
                                  category_orders={"zona": zonas},
                                  color_continuous_scale=px.colors.cyclical.Edge,
-                                 size_max=15,
+                                 size='demand',
+                                 size_max=10,
                                  zoom=10,
                                  height=600)
     map_clients.update_layout(mapbox_style="open-street-map")

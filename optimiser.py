@@ -76,11 +76,9 @@ def solve_model(instance, distances, model, solver_name, solver_path=None):
     # solve the model
     results = solver.solve(model)
     term_cond = results.solver.termination_condition
-    print("Termination condition={}".format(term_cond))
     if term_cond==TerminationCondition.feasible or term_cond==TerminationCondition.optimal:
         # Obtener función objetivo
         obj_val = model.total_value.expr()
-        print("Valor de la función objetivo: ", obj_val)
         # Creates solution
         solution = Solution(instance.n_clusters, instance.df)
         # Crea un cluster centrado en cada acopio abierto
@@ -102,7 +100,6 @@ def solve_model(instance, distances, model, solver_name, solver_path=None):
 
         # Computes cluster measurements
         for cluster in solution.clusters_list:
-            #print([node.id for node in cluster.node_list])
             cluster.get_measures(distances)
 
         # get dataframe to print
