@@ -191,8 +191,11 @@ app.layout = dbc.Container([
             ],
             className="header",
         ),
+        # Loading allows the spinner showing something is runing
         dcc.Loading(
-            dbc.Row(html.Div(id="registered"))
+            id="loading",
+            # dcc.Store inside the app that stores the intermediate value
+            children=dcc.Store(id='data_solver')
         ),
 
         dbc.Tabs(
@@ -205,12 +208,6 @@ app.layout = dbc.Container([
             active_tab="historia",
         ),
         dbc.Container(id="tab-content", className="p-4", fluid=True),
-        # dcc.Store inside the app that stores the intermediate value
-        dcc.Store(id='data_solver'),
-        # dcc.Loading(
-        #     id="loading-2",
-        #     children=dcc.Store(id='data_solver')
-        # )
     ],
     fluid=True,
 )
@@ -249,7 +246,6 @@ def update_table(page_current, page_size, jsonified_sol_data):
 # Output('scattermap', 'figure'),
 @app.callback(Output('data_solver', 'data'),
               Output('modal', 'is_open'),
-              Output('registered', 'children'),
               Input('resolver', 'n_clicks'),
               State('n_clusters', 'value'),
               State('bal_gen', 'value')
@@ -260,10 +256,10 @@ def solve_model(clic_resolver, n_clusters, epsilon):
     model = opti.create_model(instance, distances)
     solution, opt_term_cond = opti.solve_model(instance, distances, model, solvername)
     if opt_term_cond == 'infeasible':
-        return no_update, True, ''
+        return no_update, True # , ''
     else:
         data_returned = solution.dfPrint.to_json(date_format='iso', orient='split')
-        return data_returned, False, ''
+        return data_returned, False #, ''
 
 
 @app.callback(Output('scattermap', 'figure'),
