@@ -4,6 +4,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 import dash_table
+from dash import no_update
 from dash.dependencies import Input, Output, State
 import plotly.express as px
 from utilities import Node, Cluster, Solution, Instance
@@ -90,8 +91,27 @@ controls_model = dbc.Row([
                 ),
                 md=4
             ),
-            dbc.Col(
-                dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0),
+            dbc.Col([
+                    dbc.FormGroup(
+                        [dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0),]
+                    ),
+                    dbc.Modal(
+                        [
+                            dbc.ModalHeader("Detalle de la solución "),
+                            dbc.ModalBody("No existe solución factible, intente otra combinación de "
+                                          "parámetros"),
+                            dbc.ModalFooter(
+                                # dbc.Button(
+                                #     "Close", id="close", className="ml-auto", n_clicks=0
+                                # )
+                            ),
+                        ],
+                        id="modal",
+                        is_open=False,
+                    ),
+
+                    ],
+
                 md=4
             )
     ]),
@@ -216,6 +236,7 @@ def update_table(page_current, page_size, jsonified_sol_data):
 
 #Output('scattermap', 'figure'),
 @app.callback(Output('data_solver', 'data'),
+              Output('modal', 'is_open'),
               Input('resolver', 'n_clicks'),
               State('n_clusters', 'value'),
               State('bal_gen', 'value')
@@ -225,10 +246,13 @@ def solve_model(clic_resolver, n_clusters, epsilon):
     # create model
     model = opti.create_model(instance, distances)
     solution, opt_term_cond = opti.solve_model(instance, distances, model, solvername)
-    data_returned = solution.dfPrint.to_json(date_format='iso', orient='split')
+    if opt_term_cond == 'infeasible':
+        print(opt_term_cond)
+        return no_update, True
+    else:
+        data_returned = solution.dfPrint.to_json(date_format='iso', orient='split')
+        return data_returned, False
 
-    # TODO deal with the unfeasible case
-    return data_returned
 
 @app.callback(Output('scattermap', 'figure'),
               Input('data_solver', 'data')
