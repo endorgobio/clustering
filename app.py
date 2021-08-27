@@ -379,7 +379,6 @@ def update_table_nodes(page_current, page_size, jsonified_sol_data):
     Input('data_solver_clusters', 'data'))
 def update_table_clusters(page_current, page_size, jsonified_sol_data):
     data_solver = pd.read_json(jsonified_sol_data, orient='split')
-    print(data_solver)
     return data_solver.iloc[page_current*page_size:(page_current+ 1)*page_size].to_dict('records')
 
 
@@ -400,7 +399,6 @@ def solve_model(clic_resolver, n_clusters, epsilon):
     else:
         data_nodes = solution.dfNodesAssign.to_json(date_format='iso', orient='split')
         data_clusters = solution.dfClustersInfo.to_json(date_format='iso', orient='split')
-        print(data_clusters)
         return data_nodes, data_clusters, False
 
 
