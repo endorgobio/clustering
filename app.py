@@ -59,7 +59,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets,
                 suppress_callback_exceptions=True)
 
 
-# need to run it in heroku
+# needed to run it in heroku
 server = app.server
 
 controls_model = dbc.Row([
@@ -145,7 +145,6 @@ controls_card = dbc.Card(
                             md=4
                         ),
                         dbc.Col([
-                            dbc.FormGroup(dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0)),
                             dbc.Modal([
                                 dbc.ModalHeader("Detalle de la solución "),
                                 dbc.ModalBody("No existe solución factible, intente otra combinación de "
@@ -159,8 +158,11 @@ controls_card = dbc.Card(
                                 id="modal",
                                 is_open=False,
                             ),
+                            dbc.FormGroup(dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0)),
+
 
                                 ],
+                            align="end",
                             md=4
                         )
                     ]),)
