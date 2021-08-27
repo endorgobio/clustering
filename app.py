@@ -13,10 +13,10 @@ import optimiser as opti
 
 
 # read data
-df_clients = pd.read_csv(r'data\data_medium.csv')
+df_clients = pd.read_csv(r'https://raw.githubusercontent.com/endorgobio/clustering/master/data/data_medium.csv')
 #df = pd.read_csv('data_large.csv')
-colors_df = pd.read_csv(r'data\colors.csv') # convierte la paleta de colores en lista
-colors_list = colors_df['colors'].tolist()
+# colors_df = pd.read_csv(r'data\colors.csv') # convierte la paleta de colores en lista
+# colors_list = colors_df['colors'].tolist()
 
 
 
