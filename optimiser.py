@@ -44,7 +44,7 @@ def create_model(instance, # dataframe with clients data
     # number of clusters
     def nacopios_rule(model):
       return sum(model.y[j] for j in model.CLIENTES) == model.n_clusters
-    model.nacopios = Constraint(model.CLIENTES, rule=nacopios_rule)
+    model.nacopios = Constraint( rule=nacopios_rule)
 
     # assignment only to open centers
     def relvar_rule(model, i, j):
@@ -103,7 +103,7 @@ def solve_model(instance, distances, model, solver_name, solver_path=None):
             cluster.get_measures(distances)
 
         # get dataframe to print
-        solution.get_dfToPrint()
+        solution.get_dataframes()
 
         # return solution
         return solution, term_cond

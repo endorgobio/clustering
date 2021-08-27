@@ -120,7 +120,8 @@ controls_model = dbc.Row([
             )
     ]),
 
-PAGE_SIZE = 15
+PAGE_SIZE_cluster = 10
+PAGE_SIZE_nodes = 10
 tab1_content = dbc.Row([
     # dbc.Row(
     #     dbc.Col(controls_model)),
@@ -128,12 +129,36 @@ tab1_content = dbc.Row([
 
     dbc.Container(
         dbc.Row([
-            dbc.Col(
+            dbc.Col([
                 dbc.Card(
                     dbc.CardBody(
                         [  # table of students
                             dash_table.DataTable(
-                                id='datatable',
+                                id='datatable_clusters',
+                                columns=[
+                                    {"name": i, "id": i} for i in ['nombre', 'centro', 'clientes', 'carga']
+                                ],
+                                style_table={'overflowX': 'auto'},
+                                css=[{'selector': 'table', 'rule': 'table-layout: fixed'}],
+                                style_cell={
+                                    'textAlign': 'left',
+                                    'width': '{}%'.format(len(df_clients.columns)),
+                                    'textOverflow': 'ellipsis',
+                                    'overflow': 'hidden'
+                                },
+                                style_as_list_view=True,
+                                page_current=0,
+                                page_size=PAGE_SIZE_cluster,
+                                page_action='custom'
+                            ),
+                        ]
+                    )
+                ),
+                dbc.Card(
+                    dbc.CardBody(
+                        [  # table of students
+                            dash_table.DataTable(
+                                id='datatable_nodes',
                                 columns=[
                                     {"name": i, "id": i} for i in ['id', 'latitude', 'longitude', 'demand', 'zona']
                                 ],
@@ -159,21 +184,30 @@ tab1_content = dbc.Row([
                                 },
                                 style_as_list_view=True,
                                 page_current=0,
-                                page_size=PAGE_SIZE,
+                                page_size=PAGE_SIZE_nodes,
                                 page_action='custom'
                             ),
                         ]
                     )
-                ),
+                )],
                 md=5
             ),
             dbc.Col(dcc.Graph(id="scattermap"), width=7),
         ]),
         fluid=True
-    )
+    ),
+    dbc.Container(
+        dbc.Card(
+            dbc.CardBody([
+                html.P("El modelo se implementó en python, haciendo uso de la libreria"
+                       "para modelación Pyomo")
+            ])
+        ),
+
+                  fluid=True),
+
 
 ])
-
 
 
 # Define the layout
@@ -195,7 +229,12 @@ app.layout = dbc.Container([
         dcc.Loading(
             id="loading",
             # dcc.Store inside the app that stores the intermediate value
-            children=dcc.Store(id='data_solver')
+            children=dcc.Store(id='data_solver_nodes')
+        ),
+        dcc.Loading(
+            id="loading2",
+            # dcc.Store inside the app that stores the intermediate value
+            children=dcc.Store(id='data_solver_clusters')
         ),
 
         dbc.Tabs(
@@ -232,19 +271,30 @@ def render_tab_content(active_tab):
     elif active_tab == "detalles":
         return tab1_content
 
-# Update table with student information
+# Update table with nodes information
 @app.callback(
-    Output('datatable', 'data'),
-    Input('datatable', "page_current"),
-    Input('datatable', "page_size"),
-    Input('data_solver', 'data'))
-def update_table(page_current, page_size, jsonified_sol_data):
+    Output('datatable_nodes', 'data'),
+    Input('datatable_nodes', "page_current"),
+    Input('datatable_nodes', "page_size"),
+    Input('data_solver_nodes', 'data'))
+def update_table_nodes(page_current, page_size, jsonified_sol_data):
     data_solver = pd.read_json(jsonified_sol_data, orient='split')
     return data_solver.iloc[page_current*page_size:(page_current+ 1)*page_size].to_dict('records')
 
+# Update table with clusters information
+@app.callback(
+    Output('datatable_clusters', 'data'),
+    Input('datatable_clusters', "page_current"),
+    Input('datatable_clusters', "page_size"),
+    Input('data_solver_clusters', 'data'))
+def update_table_clusters(page_current, page_size, jsonified_sol_data):
+    data_solver = pd.read_json(jsonified_sol_data, orient='split')
+    print(data_solver)
+    return data_solver.iloc[page_current*page_size:(page_current+ 1)*page_size].to_dict('records')
 
-# Output('scattermap', 'figure'),
-@app.callback(Output('data_solver', 'data'),
+
+@app.callback(Output('data_solver_nodes', 'data'),
+              Output('data_solver_clusters', 'data'),
               Output('modal', 'is_open'),
               Input('resolver', 'n_clicks'),
               State('n_clusters', 'value'),
@@ -256,14 +306,16 @@ def solve_model(clic_resolver, n_clusters, epsilon):
     model = opti.create_model(instance, distances)
     solution, opt_term_cond = opti.solve_model(instance, distances, model, solvername)
     if opt_term_cond == 'infeasible':
-        return no_update, True # , ''
+        return no_update, no_update, True
     else:
-        data_returned = solution.dfPrint.to_json(date_format='iso', orient='split')
-        return data_returned, False #, ''
+        data_nodes = solution.dfNodesAssign.to_json(date_format='iso', orient='split')
+        data_clusters = solution.dfClustersInfo.to_json(date_format='iso', orient='split')
+        print(data_clusters)
+        return data_nodes, data_clusters, False
 
 
 @app.callback(Output('scattermap', 'figure'),
-              Input('data_solver', 'data')
+              Input('data_solver_nodes', 'data')
               )
 def update_graph(jsonified_sol_data):
     data_solver = pd.read_json(jsonified_sol_data, orient='split')

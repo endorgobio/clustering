@@ -38,7 +38,9 @@ class Solution:
         self.nClusters = nClusters
         self.clusters_list = []
         self.objectiveValue = 0
-        self.dfPrint = df
+        self.dfNodesAssign = df
+        self.dfClustersInfo = None
+        self.metrics= {}
 
 
     def get_objvalue(self, obj_function):
@@ -74,13 +76,26 @@ class Solution:
         obj = functions[obj_function]()
         return obj
 
-    def get_dfToPrint(self):
+    def get_dataframes(self):
         #self.dfPrint['zona_id'] = -99
-        self.dfPrint['zona'] = None
+        self.dfNodesAssign['zona'] = None
+        # creates df of nodes
         for i in range(len(self.clusters_list)):
             for node in self.clusters_list[i].node_list:
                 # self.dfPrint.loc[self.dfPrint['id'] == node.id, 'zona_id'] = i + 1
-                self.dfPrint.loc[self.dfPrint['id'] == node.id, 'zona'] = "zona" + str(i + 1)
+                self.dfNodesAssign.loc[self.dfNodesAssign['id'] == node.id, 'zona'] = "zona" + str(i + 1)
+        # create dataframe of clusters
+        self.dfClustersInfo = pd.DataFrame(columns=['nombre', 'centro', 'clientes', 'carga'])
+        for i in range(len(self.clusters_list)):
+            self.dfClustersInfo = self.dfClustersInfo.append({'nombre': "zona" + str(i + 1),
+                                                              'centro': self.clusters_list[i].center.id,
+                                                              'clientes': len(self.clusters_list[i].node_list),
+                                                              'carga': self.clusters_list[i].load},
+                                                             ignore_index=True)
+
+
+    def get_metrics(self):
+        return 'a'
 
 
 class Instance:
