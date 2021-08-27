@@ -120,16 +120,61 @@ controls_model = dbc.Row([
             )
     ]),
 
+controls_card = dbc.Card(
+                    dbc.CardBody(dbc.Row([
+                        dbc.Col([
+                                dbc.FormGroup([
+                                        html.P("Número de clusters"),
+                                        dbc.Input(id="n_clusters", type="number", min=1, max=len(df_clients), step=1, value=int(len(df_clients)/10)),
+                                ]),
+                                ],
+                            md=4
+                        ),
+                        dbc.Col(
+                            dbc.FormGroup([
+                                        html.P("Diferencia porcentual máxima de carga entre zonas"),
+                                        dbc.InputGroup(
+                                            [
+                                                dbc.Input(id="bal_gen", type="number", min=0, max=100, step=1, value=50,
+                                                          placeholder="balance"),
+                                                dbc.InputGroupAddon("%", addon_type="append"),
+                                            ],
+                                            className="mb-3",
+                                        ),
+                            ]),
+                            md=4
+                        ),
+                        dbc.Col([
+                            dbc.FormGroup(dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0)),
+                            dbc.Modal([
+                                dbc.ModalHeader("Detalle de la solución "),
+                                dbc.ModalBody("No existe solución factible, intente otra combinación de "
+                                                      "parámetros"),
+                                dbc.ModalFooter(
+                                            # dbc.Button(
+                                            #     "Close", id="close", className="ml-auto", n_clicks=0
+                                            # )
+                                ),
+                                ],
+                                id="modal",
+                                is_open=False,
+                            ),
+
+                                ],
+                            md=4
+                        )
+                    ]),)
+                ),
+
 PAGE_SIZE_cluster = 10
 PAGE_SIZE_nodes = 10
-tab1_content = dbc.Row([
-    # dbc.Row(
-    #     dbc.Col(controls_model)),
-    dbc.Container(controls_model, fluid=True),
 
-    dbc.Container(
-        dbc.Row([
-            dbc.Col([
+tab1_content = dbc.Row([
+    dbc.Container(controls_card, fluid=True),
+    dbc.Container(dbc.Col(dcc.Graph(id="scattermap"), width=12),
+                  fluid=True),
+    dbc.Container(dbc.Row([
+        dbc.Col(
                 dbc.Card(
                     dbc.CardBody(
                         [  # table of students
@@ -154,7 +199,10 @@ tab1_content = dbc.Row([
                         ]
                     )
                 ),
-                dbc.Card(
+            md=6
+        ),
+        dbc.Col(
+            dbc.Card(
                     dbc.CardBody(
                         [  # table of students
                             dash_table.DataTable(
@@ -163,18 +211,6 @@ tab1_content = dbc.Row([
                                     {"name": i, "id": i} for i in ['id', 'latitude', 'longitude', 'demand', 'zona']
                                 ],
                                 style_table={'overflowX': 'auto'},
-                                # style_cell_conditional=[
-                                #     {'if': {'column_id': 'nombre'},
-                                #      'width': '35%'},
-                                #     {'if': {'column_id': 'id'},
-                                #      'width': '12%'},
-                                #     {'if': {'column_id': 'nivel'},
-                                #      'width': '12%'},
-                                #     {'if': {'column_id': 'genero'},
-                                #      'width': '12%'},
-                                #     {'if': {'column_id': 'id_hermanos'},
-                                #      'width': '27%'},
-                                #],
                                 css=[{'selector': 'table', 'rule': 'table-layout: fixed'}],
                                 style_cell={
                                     'textAlign': 'left',
@@ -189,25 +225,84 @@ tab1_content = dbc.Row([
                             ),
                         ]
                     )
-                )],
-                md=5
-            ),
-            dbc.Col(dcc.Graph(id="scattermap"), width=7),
-        ]),
-        fluid=True
-    ),
-    dbc.Container(
-        dbc.Card(
-            dbc.CardBody([
-                html.P("El modelo se implementó en python, haciendo uso de la libreria"
-                       "para modelación Pyomo")
-            ])
-        ),
-
-                  fluid=True),
-
-
+                ),
+            md=6
+        )
+    ]))
 ])
+# tab1_content_t = dbc.Row([
+#     # dbc.Row(
+#     #     dbc.Col(controls_model)),
+#     dbc.Container(controls_card, fluid=True),
+#     dbc.Container(
+#         dbc.Row([
+#             dbc.Col([
+#                 dbc.Card(
+#                     dbc.CardBody(
+#                         [  # table of students
+#                             dash_table.DataTable(
+#                                 id='datatable_clusters',
+#                                 columns=[
+#                                     {"name": i, "id": i} for i in ['nombre', 'centro', 'clientes', 'carga']
+#                                 ],
+#                                 style_table={'overflowX': 'auto'},
+#                                 css=[{'selector': 'table', 'rule': 'table-layout: fixed'}],
+#                                 style_cell={
+#                                     'textAlign': 'left',
+#                                     'width': '{}%'.format(len(df_clients.columns)),
+#                                     'textOverflow': 'ellipsis',
+#                                     'overflow': 'hidden'
+#                                 },
+#                                 style_as_list_view=True,
+#                                 page_current=0,
+#                                 page_size=PAGE_SIZE_cluster,
+#                                 page_action='custom'
+#                             ),
+#                         ]
+#                     )
+#                 ),
+#                 dbc.Card(
+#                     dbc.CardBody(
+#                         [  # table of students
+#                             dash_table.DataTable(
+#                                 id='datatable_nodes',
+#                                 columns=[
+#                                     {"name": i, "id": i} for i in ['id', 'latitude', 'longitude', 'demand', 'zona']
+#                                 ],
+#                                 style_table={'overflowX': 'auto'},
+#                                 css=[{'selector': 'table', 'rule': 'table-layout: fixed'}],
+#                                 style_cell={
+#                                     'textAlign': 'left',
+#                                     'width': '{}%'.format(len(df_clients.columns)),
+#                                     'textOverflow': 'ellipsis',
+#                                     'overflow': 'hidden'
+#                                 },
+#                                 style_as_list_view=True,
+#                                 page_current=0,
+#                                 page_size=PAGE_SIZE_nodes,
+#                                 page_action='custom'
+#                             ),
+#                         ]
+#                     )
+#                 )],
+#                 md=5
+#             ),
+#             dbc.Col(dcc.Graph(id="scattermap"), width=7),
+#         ]),
+#         fluid=True
+#     ),
+#     dbc.Container(
+#         dbc.Card(
+#             dbc.CardBody([
+#                 html.P("El modelo se implementó en python, haciendo uso de la libreria"
+#                        "para modelación Pyomo")
+#             ])
+#         ),
+#
+#                   fluid=True),
+#
+#
+# ])
 
 
 # Define the layout
@@ -225,18 +320,6 @@ app.layout = dbc.Container([
             ],
             className="header",
         ),
-        # Loading allows the spinner showing something is runing
-        dcc.Loading(
-            id="loading",
-            # dcc.Store inside the app that stores the intermediate value
-            children=dcc.Store(id='data_solver_nodes')
-        ),
-        dcc.Loading(
-            id="loading2",
-            # dcc.Store inside the app that stores the intermediate value
-            children=dcc.Store(id='data_solver_clusters')
-        ),
-
         dbc.Tabs(
             [
                 dbc.Tab(label="La historia", tab_id="historia"),
@@ -245,6 +328,13 @@ app.layout = dbc.Container([
             ],
             id="tabs",
             active_tab="historia",
+        ),
+        # Loading allows the spinner showing something is runing
+        dcc.Loading(
+            id="loading",
+            # dcc.Store inside the app that stores the intermediate value
+            children=[dcc.Store(id='data_solver_nodes'),
+                      dcc.Store(id='data_solver_clusters')]
         ),
         dbc.Container(id="tab-content", className="p-4", fluid=True),
     ],
