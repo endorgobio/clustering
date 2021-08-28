@@ -9,6 +9,8 @@ from dash.dependencies import Input, Output, State
 import plotly.express as px
 from utilities import Node, Cluster, Solution, Instance
 import optimiser as opti
+import os
+import json
 
 
 
@@ -41,7 +43,7 @@ for node1 in nodes:
     key = (node1.id, node2.id)
     distances[key] = d
 
-# Configura optimizador
+# Set up optimiser
 solvername = 'glpk'
 solverpath_exe = 'C:\\glpk-4.65\\w64\\glpsol'
 
@@ -55,12 +57,24 @@ external_stylesheets = [dbc.themes.BOOTSTRAP,
 # Creates the app
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets,
                 external_scripts=['//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-MML-AM_CHTML',],
-                title="Alternancia",
+                title="Zonificación",
                 suppress_callback_exceptions=True)
 
 
 # needed to run it in heroku
 server = app.server
+
+# narratives
+filepath = os.path.split(os.path.realpath(__file__))[0]
+# narrative tab1
+historia_text = open(os.path.join(filepath, "laHistoria.md"), "r").read()
+# narrative tab3
+detalles_text = open(os.path.join(filepath, "losDetalles.md"), "r").read()
+# modelo
+f = open('modelo.json', )
+# returns JSON object as
+# a dictionary
+data = json.load(f)
 
 controls_model = dbc.Row([
         dbc.Col(
@@ -93,11 +107,6 @@ controls_model = dbc.Row([
             ),
             dbc.Col([
                     dbc.FormGroup(
-                        # dcc.Loading(
-                        #     id="loading-1",
-                        #     type="default",
-                        #     children=dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0)
-                        # ),
                         dbc.Button("Resolver", id="resolver", className="mr-2", n_clicks=0)
                     ),
                     dbc.Modal(
@@ -124,7 +133,7 @@ controls_card = dbc.Card(
                     dbc.CardBody(dbc.Row([
                         dbc.Col([
                                 dbc.FormGroup([
-                                        html.P("Número de clusters"),
+                                        html.P("Número de zonas"),
                                         dbc.Input(id="n_clusters", type="number", min=1, max=len(df_clients), step=1, value=int(len(df_clients)/10)),
                                 ]),
                                 ],
@@ -132,7 +141,7 @@ controls_card = dbc.Card(
                         ),
                         dbc.Col(
                             dbc.FormGroup([
-                                        html.P("Diferencia porcentual máxima de carga entre zonas"),
+                                        html.P("% de diferencia de carga entre zonas"),
                                         dbc.InputGroup(
                                             [
                                                 dbc.Input(id="bal_gen", type="number", min=0, max=100, step=1, value=50,
@@ -172,6 +181,46 @@ PAGE_SIZE_cluster = 10
 PAGE_SIZE_nodes = 10
 
 tab1_content = dbc.Row([
+        dbc.Col(dcc.Markdown(historia_text, dangerously_allow_html=True), md=8),
+        dbc.Col(html.Div([
+            #html.Img(src="/assets/images/banner_blue_text.png", className='banner_subsection'),
+            html.Div(
+                html.P("Los retos", className="header-description"),
+                className="header_subsection1"),
+            dbc.Card([
+                dbc.CardBody([
+                    html.P(
+                        "Visualizar la asignación de pacientes por zona en un mapa",
+                        style={'textAlign': 'justify'},
+                        className="card-text",
+                    ),
+                ])
+            ]),
+            dbc.Card([
+                dbc.CardBody([
+                    html.P(
+                        "Crear un modelo que asigne zonas a los terapeutas balanceando las"
+                        "cargas de trabajo",
+                        style={'textAlign': 'justify'},
+                        className="card-text",
+                    ),
+                ])
+            ]),
+            dbc.Card([
+                dbc.CardBody([
+                    html.P(
+                        "Resolver el modelo con un optimizador no comercial",
+                        style={'textAlign': 'justify'},
+                        className="card-text",
+                    ),
+                ])
+            ]),
+        ]),
+            md=4),
+    ]
+)
+
+tab2_content = dbc.Row([
     dbc.Container(controls_card, fluid=True),
     dbc.Container(dbc.Col(dcc.Graph(id="scattermap"), width=12),
                   fluid=True),
@@ -232,91 +281,82 @@ tab1_content = dbc.Row([
         )
     ]))
 ])
-# tab1_content_t = dbc.Row([
-#     # dbc.Row(
-#     #     dbc.Col(controls_model)),
-#     dbc.Container(controls_card, fluid=True),
-#     dbc.Container(
-#         dbc.Row([
-#             dbc.Col([
-#                 dbc.Card(
-#                     dbc.CardBody(
-#                         [  # table of students
-#                             dash_table.DataTable(
-#                                 id='datatable_clusters',
-#                                 columns=[
-#                                     {"name": i, "id": i} for i in ['nombre', 'centro', 'clientes', 'carga']
-#                                 ],
-#                                 style_table={'overflowX': 'auto'},
-#                                 css=[{'selector': 'table', 'rule': 'table-layout: fixed'}],
-#                                 style_cell={
-#                                     'textAlign': 'left',
-#                                     'width': '{}%'.format(len(df_clients.columns)),
-#                                     'textOverflow': 'ellipsis',
-#                                     'overflow': 'hidden'
-#                                 },
-#                                 style_as_list_view=True,
-#                                 page_current=0,
-#                                 page_size=PAGE_SIZE_cluster,
-#                                 page_action='custom'
-#                             ),
-#                         ]
-#                     )
-#                 ),
-#                 dbc.Card(
-#                     dbc.CardBody(
-#                         [  # table of students
-#                             dash_table.DataTable(
-#                                 id='datatable_nodes',
-#                                 columns=[
-#                                     {"name": i, "id": i} for i in ['id', 'latitude', 'longitude', 'demand', 'zona']
-#                                 ],
-#                                 style_table={'overflowX': 'auto'},
-#                                 css=[{'selector': 'table', 'rule': 'table-layout: fixed'}],
-#                                 style_cell={
-#                                     'textAlign': 'left',
-#                                     'width': '{}%'.format(len(df_clients.columns)),
-#                                     'textOverflow': 'ellipsis',
-#                                     'overflow': 'hidden'
-#                                 },
-#                                 style_as_list_view=True,
-#                                 page_current=0,
-#                                 page_size=PAGE_SIZE_nodes,
-#                                 page_action='custom'
-#                             ),
-#                         ]
-#                     )
-#                 )],
-#                 md=5
-#             ),
-#             dbc.Col(dcc.Graph(id="scattermap"), width=7),
-#         ]),
-#         fluid=True
-#     ),
-#     dbc.Container(
-#         dbc.Card(
-#             dbc.CardBody([
-#                 html.P("El modelo se implementó en python, haciendo uso de la libreria"
-#                        "para modelación Pyomo")
-#             ])
-#         ),
-#
-#                   fluid=True),
-#
-#
-# ])
 
+tab3_content = dbc.Row([
+    dbc.Col(
+        html.Div(id='static', children=[
+            html.P("Detras de la zonificación de los pacientes para ser asignados al personal"
+                   "asistencial hay un modelo  matemático que genera información que ayuda a "
+                   "tomar dicha decisión. Este es el modelo:"),
+            dbc.Card([
+                # dbc.CardImg(src="https://source.unsplash.com/daily", top=True),
+                # dbc.CardImg(src="/assets/images/banner_blue.png", top=True),
+                dbc.CardBody([
+                    dcc.Markdown('''
+                        Sea `P` el conjunto de pacientes, cada uno de ellos con una demanda estimada de
+                         tiempo de servicio `t`. Considere la distancia `d` entre cada par de pacientes y `k` 
+                         como el número de zonas que deben crearse. La carga de trabajo estimada para cada zona
+                         puede calcularse como la suma total de las cargas `t` sobre el número de zonas `k`. Considere
+                         ademas &epsilon como el porcentaje máximo tolerable de diferencia entre la carga de trabajo de
+                         una zona y la carga promedio esperada.  
+
+                        Asumiremos que cada una de las zonas se crea entorno a uno de los pacientes. Para ello, 
+                        considere la variable `y` que indica si un paciente dado es el centro de una de las `k`
+                        zonas; la variable `x` determina a cual de las zonas creadas es asignado cada paciente
+                    '''),
+                    dcc.Markdown(''' La función minimiza la suma de los pacientes al centro de sus zonas, con lo que se 
+                    que dichas zonas sean tan compactas cómo sea posible, '''),
+                    data['objetivo'],
+                    dcc.Markdown(''' Garantizando que a cada estudiante se asigna cuando más un patrón, '''),
+                    data['restriccion1'],
+                    dcc.Markdown(''' La diferencia porcentual entre el número de niñas y niños en cada curso no 
+                         excede el valor &beta;'''),
+                    data['restriccion2'],
+                    dcc.Markdown(''' El número de estudiantes en cada curso esta entre su valor mínimo y máximo'''),
+                    data['restriccion3'],
+                    data['restriccion4'],
+                    dcc.Markdown(''' No se supere el aforo del colegio'''),
+                    data['restriccion5'],
+                ])
+            ]),
+        ]),
+        md=8),
+    dbc.Col(
+        [
+            dbc.Card(
+                dbc.CardBody([
+                    html.P("El modelo se implementó en python, haciendo uso de la libreria"
+                           "para modelación Pyomo")
+                ])
+            ),
+            dbc.Card(
+                dbc.CardBody([
+                    html.P("El solver empleado para resolver el modelo fue glpk, cuyo uso  para "
+                           "fines no comerciales esta regulado the por el acuerdo 'GNU General Public License'")
+                ])
+            ),
+            dbc.Card(
+                dbc.CardBody([
+                    html.P("La visualización de los resultados del modelo se implemento haciendo uso del framework "
+                           "dash soportado plotly para las gráficas y visualizaciones'")
+                ])
+            )
+        ],
+        md=4
+    ),
+]
+)
 
 # Define the layout
 app.layout = dbc.Container([
         html.Div(
             children=[
                 html.H1(
-                    children="Alternancia escolar", className="header-title"
+                    children="Zonificación", className="header-title"
                 ),
-                html.P(["Optimización  de jornadas escolares",
+                html.P(["Creación de zonas para personal médico docimiciliarop",
                                      html.Br(),
-                                     " Modelo de alternancia"],
+                                     " Balance de carga"],
                     className="header-description",
                 ),
             ],
@@ -359,9 +399,9 @@ def render_tab_content(active_tab):
     if active_tab == "historia":
         return tab1_content
     elif active_tab == "solucion":
-        return tab1_content
+        return tab2_content
     elif active_tab == "detalles":
-        return tab1_content
+        return tab3_content
 
 # Update table with nodes information
 @app.callback(
