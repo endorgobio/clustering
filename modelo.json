@@ -1,0 +1,8 @@
+{
+  "objetivo": "$$\\text{maximizar}\\  \\displaystyle\\sum_{i \\in P}\\sum_{j \\in P}d_{ij}x_{ij} $$",
+  "restriccion1": "$$\\sum_{j \\in P}  x_{ij} = 1 \\ \\forall i \\in P$$",
+  "restriccion2": "$$\\sum_{j \\in P}  y_{j} = k $$",
+  "restriccion3": "$$ x_{ij} \\leq y_j \\ \\forall i \\in P, \\forall j \\in P$$",
+  "restriccion4": "$$ \\sum_{i \\in P} t_i x_{ij} \\leq (1 + \\epsilon)\\dfrac{\\displaystyle\\sum_{i \\in P}t_i}{k} y_j \\ \\forall j \\in C$$",
+  "restriccion5": "$$ \\sum_{i \\in P} t_i x_{ij} \\geq (1 - \\epsilon)\\dfrac{\\displaystyle\\sum_{i \\in P}t_i}{k} y_j \\ \\forall j \\in C$$"
+}
