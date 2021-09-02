@@ -358,7 +358,7 @@ app.layout = dbc.Container([
                 html.H1(
                     children="Zonificación", className="header-title"
                 ),
-                html.P(["Creación de zonas para personal médico docimiciliarop",
+                html.P(["Creación de zonas para personal médico domiciliario",
                                      html.Br(),
                                      " Balance de carga"],
                     className="header-description",
