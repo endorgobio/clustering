@@ -7,8 +7,10 @@ import dash_table
 from dash import no_update
 from dash.dependencies import Input, Output, State
 import plotly.express as px
+from plotly import graph_objs as go
 from utilities import Node, Cluster, Solution, Instance
 import optimiser as opti
+from geopy.distance import distance
 import os
 import json
 
@@ -17,35 +19,32 @@ import json
 # read data
 df_clients = pd.read_csv(r'https://raw.githubusercontent.com/endorgobio/clustering/master/data/data_medium.csv')
 #df = pd.read_csv('data_large.csv')
-# colors_df = pd.read_csv(r'data\colors.csv') # convierte la paleta de colores en lista
-# colors_list = colors_df['colors'].tolist()
 
 
 
 # Define nodes
 nodes = []
 for row in range(len(df_clients.index)):
-  node = Node(int(df_clients.loc[row, "id"]),
+    node = Node(int(df_clients.loc[row, "id"]),
                   df_clients.loc[row, "latitude"],
                   df_clients.loc[row, "longitude"],
                   df_clients.loc[row, "demand"])
-  nodes.append(node)
-
-
+    nodes.append(node)
 
 # Computes a dictionary of distances
-from geopy.distance import distance
+
 distances = {}
 # computes the distance for each pair of nodes
 for node1 in nodes:
-  for node2 in nodes:
-    d = distance((node1.lat, node1.long), (node2.lat, node2.long)).m
-    key = (node1.id, node2.id)
-    distances[key] = d
+    for node2 in nodes:
+        d = distance((node1.lat, node1.long), (node2.lat, node2.long)).m
+        key = (node1.id, node2.id)
+        distances[key] = d
 
 # Set up optimiser
 solvername = 'glpk'
 solverpath_exe = 'C:\\glpk-4.65\\w64\\glpsol'
+solverpath_exe = 'D:\\glpk-4.65\\w64\\glpsol'
 
 # Define the stylesheets
 external_stylesheets = [dbc.themes.BOOTSTRAP,
@@ -76,6 +75,7 @@ f = open('modelo.json', )
 # a dictionary
 data = json.load(f)
 
+# creates control for tab2
 controls_model = dbc.Row([
         dbc.Col(
                 [
@@ -177,9 +177,7 @@ controls_card = dbc.Card(
                     ]),)
                 ),
 
-PAGE_SIZE_cluster = 10
-PAGE_SIZE_nodes = 10
-
+# tab contents
 tab1_content = dbc.Row([
         dbc.Col(dcc.Markdown(historia_text, dangerously_allow_html=True), md=8),
         dbc.Col(html.Div([
@@ -220,6 +218,9 @@ tab1_content = dbc.Row([
     ]
 )
 
+# number of rows per page in datatables
+PAGE_SIZE_cluster = 10
+PAGE_SIZE_nodes = 10
 tab2_content = dbc.Row([
     dbc.Container(controls_card, fluid=True),
     dbc.Container(dbc.Col(dcc.Graph(id="scattermap"), width=12),
@@ -297,25 +298,28 @@ tab3_content = dbc.Row([
                          tiempo de servicio `t`. Considere la distancia `d` entre cada par de pacientes y `k` 
                          como el número de zonas que deben crearse. La carga de trabajo estimada para cada zona
                          puede calcularse como la suma total de las cargas `t` sobre el número de zonas `k`. Considere
-                         ademas &epsilon como el porcentaje máximo tolerable de diferencia entre la carga de trabajo de
+                         ademas &epsilon; como el porcentaje máximo tolerable de diferencia entre la carga de trabajo de
                          una zona y la carga promedio esperada.  
 
                         Asumiremos que cada una de las zonas se crea entorno a uno de los pacientes. Para ello, 
                         considere la variable `y` que indica si un paciente dado es el centro de una de las `k`
                         zonas; la variable `x` determina a cual de las zonas creadas es asignado cada paciente
                     '''),
-                    dcc.Markdown(''' La función minimiza la suma de los pacientes al centro de sus zonas, con lo que se 
-                    que dichas zonas sean tan compactas cómo sea posible, '''),
+                    dcc.Markdown(''' La función busca crear zonas compactas minimizando la suma de  la distancia  de los 
+                    pacientes al centro de sus zonas. '''),
                     data['objetivo'],
-                    dcc.Markdown(''' Garantizando que a cada estudiante se asigna cuando más un patrón, '''),
+                    dcc.Markdown(''' Garantizando que: '''),
+                    dcc.Markdown(''' Cada paciente es asignado a una zona. '''),
+
                     data['restriccion1'],
-                    dcc.Markdown(''' La diferencia porcentual entre el número de niñas y niños en cada curso no 
-                         excede el valor &beta;'''),
+                    dcc.Markdown(''' Se crean tantas zonas cómo indica el parámetro `k` '''),
                     data['restriccion2'],
-                    dcc.Markdown(''' El número de estudiantes en cada curso esta entre su valor mínimo y máximo'''),
+                    dcc.Markdown(''' Se identifica la localización de un paciente como el centro de cada zona y los pacientes 
+                        se asignan solo a dichas zonas'''),
                     data['restriccion3'],
+                    dcc.Markdown(''' La carga de trabajo de cada zona solo puede desviarse un &epsilon; % del valor promedio
+                    de la carga '''),
                     data['restriccion4'],
-                    dcc.Markdown(''' No se supere el aforo del colegio'''),
                     data['restriccion5'],
                 ])
             ]),
@@ -325,7 +329,7 @@ tab3_content = dbc.Row([
         [
             dbc.Card(
                 dbc.CardBody([
-                    html.P("El modelo se implementó en python, haciendo uso de la libreria"
+                    html.P("El modelo se implementó en python, haciendo uso de la libreria "
                            "para modelación Pyomo")
                 ])
             ),
@@ -384,7 +388,6 @@ app.layout = dbc.Container([
 )
 
 
-
 # Render the tabs depending on the selection
 @app.callback(
     Output("tab-content", "children"),
@@ -403,6 +406,7 @@ def render_tab_content(active_tab):
     elif active_tab == "detalles":
         return tab3_content
 
+
 # Update table with nodes information
 @app.callback(
     Output('datatable_nodes', 'data'),
@@ -412,6 +416,7 @@ def render_tab_content(active_tab):
 def update_table_nodes(page_current, page_size, jsonified_sol_data):
     data_solver = pd.read_json(jsonified_sol_data, orient='split')
     return data_solver.iloc[page_current*page_size:(page_current+ 1)*page_size].to_dict('records')
+
 
 # Update table with clusters information
 @app.callback(
@@ -435,7 +440,7 @@ def solve_model(clic_resolver, n_clusters, epsilon):
     instance = Instance(df_clients, nodes, n_clusters, epsilon/100)
     # create model
     model = opti.create_model(instance, distances)
-    solution, opt_term_cond = opti.solve_model(instance, distances, model, solvername)
+    solution, opt_term_cond = opti.solve_model(instance, distances, model, solvername)#, solverpath_exe)
     if opt_term_cond == 'infeasible':
         return no_update, no_update, True
     else:
@@ -444,6 +449,7 @@ def solve_model(clic_resolver, n_clusters, epsilon):
         return data_nodes, data_clusters, False
 
 
+# Update map
 @app.callback(Output('scattermap', 'figure'),
               Input('data_solver_nodes', 'data')
               )
@@ -453,37 +459,27 @@ def update_graph(jsonified_sol_data):
 
     # Draw graph
     map_clients = px.scatter_mapbox(data_solver,
-                                 lat="latitude",
-                                 lon="longitude",
-                                 hover_name="demand",
-                                 color="zona",
-                                 category_orders={"zona": zonas},
-                                 color_continuous_scale=px.colors.cyclical.Edge,
-                                 size='demand',
-                                 size_max=10,
-                                 zoom=10,
-                                 height=600)
-    map_clients.update_layout(mapbox_style="open-street-map")
+                                    lat="latitude",
+                                    lon="longitude",
+                                    #hover_name="demand",
+                                    hover_data={'id': True,  # remove species from hover data
+                                                'zona': True,
+                                                'demand': True,
+                                                'latitude': False,
+                                                'longitude': False
+                                                },
+                                    labels={'id': 'paciente ',
+                                            'demand': 'demanda'},
+                                    color="zona",
+                                    category_orders={"zona": zonas},
+                                    color_continuous_scale=px.colors.cyclical.Edge,
+                                    size='demand',
+                                    size_max=10,
+                                    zoom=10,
+                                    height=600)
+    map_clients.update_layout(mapbox_style="open-street-map",)
     return map_clients
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-# map_aten.update_traces(marker_color="#000000",
-#                    #marker_symbol="star",
-#                    selector=dict(type='scattermapbox'))
-
-#map_aten.show()
 
 # main to run the app
 if __name__ == "__main__":
