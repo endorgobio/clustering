@@ -15,12 +15,9 @@ import os
 import json
 
 
-
 # read data
 df_clients = pd.read_csv(r'https://raw.githubusercontent.com/endorgobio/clustering/master/data/data_medium.csv')
-#df = pd.read_csv('data_large.csv')
-
-
+#df_clients = pd.read_csv('data/data_large.csv')
 
 # Define nodes
 nodes = []
