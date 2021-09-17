@@ -367,7 +367,7 @@ activetab_label_style = {
 
 # Define the layout
 app.layout = dbc.Container([
-        dbc.Row(html.Img(src='assets/IMAGES/imagenBanner_Zonificacion1.jpg', style={'width':'100%'})),
+        dbc.Row(html.Img(src='assets/images/imagenBanner_Zonificacion1.jpg', style={'width':'100%'})),
         # html.Div(
         #     children=[
         #
@@ -401,7 +401,7 @@ app.layout = dbc.Container([
                       dcc.Store(id='data_solver_clusters')]
         ),
         dbc.Container(id="tab-content", className="p-4", fluid=True),
-        dbc.Row(html.Img(src='assets/IMAGES/footnote.png', style={'width':'100%'})),
+        dbc.Row(html.Img(src='assets/images/footnote.png', style={'width':'100%'})),
     ],
     fluid=True,
 )
