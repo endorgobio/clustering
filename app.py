@@ -181,7 +181,8 @@ tab1_content = dbc.Row([
             #html.Img(src="/assets/images/banner_blue_text.png", className='banner_subsection'),
             html.Div(
                 html.P("Los retos", className="header-description"),
-                className="header_subsection1"),
+                #className="header_subsection1"
+            ),
             dbc.Card([
                 dbc.CardBody([
                     html.P(
@@ -348,29 +349,49 @@ tab3_content = dbc.Row([
 ]
 )
 
+
+tabs_styles = {
+    'height': '44px',
+    'align-items': 'center'
+}
+
+tab_label_style = {
+    'color' : 'black'
+}
+
+activetab_label_style = {
+    'color': '#FD6E72',
+    'fontWeight': 'bold'
+}
+
+
 # Define the layout
 app.layout = dbc.Container([
-        html.Div(
-            children=[
-                html.H1(
-                    children="Zonificación", className="header-title"
-                ),
-                html.P(["Creación de zonas para personal médico domiciliario",
-                                     html.Br(),
-                                     " Balance de carga"],
-                    className="header-description",
-                ),
-            ],
-            className="header",
-        ),
+        dbc.Row(html.Img(src='assets/IMAGES/imagenBanner_Zonificacion1.jpg', style={'width':'100%'})),
+        # html.Div(
+        #     children=[
+        #
+        #         html.H1(
+        #             children="Zonificación", className="header-title"
+        #         ),
+        #         html.P(["Creación de zonas para personal médico domiciliario",
+        #                              html.Br(),
+        #                              " Balance de carga"],
+        #             className="header-description",
+        #         ),
+        #     ],
+        #     # style={'background-image': 'assets/IMAGES/imagenBanner_Zonificacion1.jpg'},
+        #     className="header",
+        # ),
         dbc.Tabs(
-            [
-                dbc.Tab(label="La historia", tab_id="historia"),
-                dbc.Tab(label="La solución", tab_id="solucion"),
-                dbc.Tab(label="Los detalles", tab_id="detalles"),
+            children=[
+                dbc.Tab(label="La historia", tab_id="historia", label_style=tab_label_style, active_label_style=activetab_label_style),
+                dbc.Tab(label="La solución", tab_id="solucion", label_style=tab_label_style, active_label_style=activetab_label_style),
+                dbc.Tab(label="Los detalles", tab_id="detalles",  label_style=tab_label_style, active_label_style=activetab_label_style),
             ],
             id="tabs",
             active_tab="historia",
+            style=tabs_styles
         ),
         # Loading allows the spinner showing something is runing
         dcc.Loading(
@@ -380,6 +401,7 @@ app.layout = dbc.Container([
                       dcc.Store(id='data_solver_clusters')]
         ),
         dbc.Container(id="tab-content", className="p-4", fluid=True),
+        dbc.Row(html.Img(src='assets/IMAGES/footnote.png', style={'width':'100%'})),
     ],
     fluid=True,
 )
