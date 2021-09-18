@@ -180,7 +180,7 @@ tab1_content = dbc.Row([
         dbc.Col(html.Div([
             #html.Img(src="/assets/images/banner_blue_text.png", className='banner_subsection'),
             html.Div(
-                html.P("Los retos", className="header-description"),
+                html.P("Los retos", className="subheader-description"),
                 #className="header_subsection1"
             ),
             dbc.Card([
@@ -364,25 +364,51 @@ activetab_label_style = {
     'fontWeight': 'bold'
 }
 
+ENDORGOBIO_LOGO = "assets/images/logo-Rojo.png"
+
+
+search_bar = dbc.Row(
+    [
+        dbc.Col(dbc.Input(type="search", placeholder="Search")),
+        dbc.Col(
+            html.Img(src=ENDORGOBIO_LOGO, height="30px"),
+            width="auto",
+        ),
+    ],
+    no_gutters=True,
+    className="ml-auto flex-nowrap mt-3 mt-md-0",
+    align="center",
+)
+
+navbar = dbc.Navbar(
+    [
+        html.A(
+            # Use row and col to control vertical alignment of logo / brand
+            dbc.Row(
+                [
+                    dbc.Col(html.Img(src=ENDORGOBIO_LOGO, height="30px")),
+                    dbc.Col(dbc.NavbarBrand("Navbar", className="ml-2")),
+                ],
+                align="center",
+                no_gutters=True,
+            ),
+            href="https://plotly.com",
+        ),
+        dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
+        dbc.Collapse(
+            search_bar, id="navbar-collapse", navbar=True, is_open=False
+        ),
+    ],
+    color="light",
+    dark=True,
+    fixed='top'
+)
+
 
 # Define the layout
 app.layout = dbc.Container([
+        navbar,
         dbc.Row(html.Img(src='assets/images/imagenBanner_Zonificacion1.jpg', style={'width':'100%'})),
-        # html.Div(
-        #     children=[
-        #
-        #         html.H1(
-        #             children="Zonificación", className="header-title"
-        #         ),
-        #         html.P(["Creación de zonas para personal médico domiciliario",
-        #                              html.Br(),
-        #                              " Balance de carga"],
-        #             className="header-description",
-        #         ),
-        #     ],
-        #     # style={'background-image': 'assets/IMAGES/imagenBanner_Zonificacion1.jpg'},
-        #     className="header",
-        # ),
         dbc.Tabs(
             children=[
                 dbc.Tab(label="La historia", tab_id="historia", label_style=tab_label_style, active_label_style=activetab_label_style),
@@ -393,7 +419,7 @@ app.layout = dbc.Container([
             active_tab="historia",
             style=tabs_styles
         ),
-        # Loading allows the spinner showing something is runing
+        # Loading allows the spinner showing something is running
         dcc.Loading(
             id="loading",
             # dcc.Store inside the app that stores the intermediate value
@@ -499,6 +525,16 @@ def update_graph(jsonified_sol_data):
     map_clients.update_layout(mapbox_style="open-street-map",)
     return map_clients
 
+# add callback for toggling the collapse on small screens
+@app.callback(
+    Output("navbar-collapse", "is_open"),
+    [Input("navbar-toggler", "n_clicks")],
+    [State("navbar-collapse", "is_open")],
+)
+def toggle_navbar_collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open
 
 # main to run the app
 if __name__ == "__main__":
