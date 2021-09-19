@@ -365,17 +365,34 @@ activetab_label_style = {
 }
 
 ENDORGOBIO_LOGO = "assets/images/logo-Rojo.png"
+INICIO = "assets/images/inicio.png"
+POSTULATE = "assets/images/postulate.png"
 
 
-search_bar = dbc.Row(
+back_bar = dbc.Row(
     [
-        dbc.Col(dbc.Input(type="search", placeholder="Search")),
         dbc.Col(
-            html.Img(src=ENDORGOBIO_LOGO, height="30px"),
-            width="auto",
+            html.A(
+                dbc.Row(
+                    [dbc.Col(html.Img(src=POSTULATE, height="30px")),],
+                    align="center",
+                    no_gutters=True,
+                ),
+            href="https://sites.google.com/view/proyectoendorgobio/post%C3%BAlate",
+            ),
         ),
+        dbc.Col(
+            html.A(
+                dbc.Row(
+                    [dbc.Col(html.Img(src=INICIO, height="30px")),],
+                    align="center",
+                    no_gutters=True,
+                ),
+            href="https://sites.google.com/view/proyectoendorgobio/inicio",
+            ),
+        )
     ],
-    no_gutters=True,
+    no_gutters=False,
     className="ml-auto flex-nowrap mt-3 mt-md-0",
     align="center",
 )
@@ -387,7 +404,6 @@ navbar = dbc.Navbar(
             dbc.Row(
                 [
                     dbc.Col(html.Img(src=ENDORGOBIO_LOGO, height="30px")),
-                    dbc.Col(dbc.NavbarBrand("Navbar", className="ml-2")),
                 ],
                 align="center",
                 no_gutters=True,
@@ -396,7 +412,7 @@ navbar = dbc.Navbar(
         ),
         dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
         dbc.Collapse(
-            search_bar, id="navbar-collapse", navbar=True, is_open=False
+            back_bar, id="navbar-collapse", navbar=True, is_open=False
         ),
     ],
     color="light",
