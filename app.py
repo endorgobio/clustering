@@ -349,7 +349,6 @@ tab3_content = dbc.Row([
 ]
 )
 
-
 tabs_styles = {
     'height': '44px',
     'align-items': 'center'
@@ -443,7 +442,7 @@ app.layout = dbc.Container([
                       dcc.Store(id='data_solver_clusters')]
         ),
         dbc.Container(id="tab-content", className="p-4", fluid=True),
-        dbc.Row(html.Img(src='assets/images/footnote.png', style={'width':'100%'})),
+        dbc.Row(html.Img(src='assets/images/pie-endorgobio.jpg', style={'width':'100%'})),
     ],
     fluid=True,
 )
